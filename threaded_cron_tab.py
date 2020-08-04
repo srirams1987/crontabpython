@@ -9,6 +9,11 @@ taskQueue = Queue()
 
 
 class task:
+    """
+    Class that encapsulate the command string. The command string will be executed in the terminal or the command prompt
+    TODO: add specific eval for specific eval-enviroment. MATLAB, terminal, python, etc
+
+    """
     def __init__(self, cmd_str):
         self._cmd_str = cmd_str
     
@@ -20,6 +25,10 @@ class task:
         os.system(self._cmd_str)
 
 class FREQUENCY(Enum) :
+    """
+    Enum for various frequency that the cron task is required to run 
+    TODO: Make this more dynamic 
+    """
     Daily = 0
     Monthly = 1
     Yearly = 2 
@@ -29,6 +38,12 @@ class FREQUENCY(Enum) :
     Seconds10 = 6
 
 class crontask(Thread):
+    """
+    A thread class that will encapsulates the id, task and frequency for the cron task. 
+    This class will wait will the task is ready to be executed and add the task to the task-execution-queue
+    Also has the feature to interrupt the thread and stop execution.
+    TODO: Make use of threadpool and employ life cycle management of the thread. What happens after thread is inturrupted ?
+    """
     def __init__(self, frequency, task, id):
         Thread.__init__(self)
         self.__freq = frequency
@@ -85,12 +100,18 @@ class ThreadedProcessor(Thread) :
                 self.task_queue.task_done()
 
 def create_threads(taskQueue):
+    """
+    Create all the threads that will wait on the execution task-queue
+    """
     for r in range(0, 10):
         t = ThreadedProcessor(taskQueue, "name_"+str(r))
         t.daemon = True
         t.start()
 
 def add_task_to_run_queue(ctask, id):
+    """
+    Add the task to the executed to the queue
+    """
     global taskQueue
     taskQueue.put((ctask, id))
 
