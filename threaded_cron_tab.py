@@ -67,10 +67,15 @@ class crontask(Thread):
         if(self._interupted):
             print("{0} task interupped".format(self.__id))
 
-
-
+    
     def set_interupt_flag(self):
         self._interupted = True
+    
+    
+    def is_interuppted(self):
+        return self._interupted
+
+
     def _get_end_time(self):
         if self.__freq == FREQUENCY.Daily:
             end_time = datetime.now() + timedelta(days=1)
@@ -86,6 +91,9 @@ class crontask(Thread):
 
     
 class ThreadedProcessor(Thread) :
+    """
+    The threaded worker that waits on the execution queue and execuets that cron task
+    """
     def __init__(self, taskQueue, name ):
         Thread.__init__(self)
         self.task_queue = taskQueue
@@ -102,6 +110,7 @@ class ThreadedProcessor(Thread) :
 def create_threads(taskQueue):
     """
     Create all the threads that will wait on the execution task-queue
+    TODO: Right now the number of threads are set to 10. Update to use threadpool and dynamically increase the number of threads based on the demand.
     """
     for r in range(0, 10):
         t = ThreadedProcessor(taskQueue, "name_"+str(r))
@@ -119,8 +128,10 @@ def add_task_to_run_queue(ctask, id):
 
 if __name__ == "__main__":
 
+    #Start the threaded task workers 
     create_threads(taskQueue)
 
+    #create tasks that are to be executed as cron 
     func1 = task("echo 'executed function1'")
     func2 = task("echo 'executed function2'")
     func3 = task("echo 'executed function3'")
@@ -128,6 +139,7 @@ if __name__ == "__main__":
 
 
     print(datetime.now())
+    #create crontasks with the frequency 
     ctask1 = crontask(FREQUENCY.Seconds10, func1, 1)
     ctask1.start()
     ctask2 = crontask(FREQUENCY.Seconds10, func2, 2)
@@ -137,12 +149,17 @@ if __name__ == "__main__":
     ctask4 = crontask(FREQUENCY.Seconds10, func4, 4)
     ctask4.start()
 
+    # Add all the tasks that are created to a dictioanry that could access the crontask objects for maintanence 
+    # and interupting(stop executingz) the task
     d ={}
     d['1'] = ctask1
     d['2'] = ctask2
     d['3'] = ctask3
     d['4'] = ctask4
+    
+    # Example on how to interurrupt(end cron task)
     start = datetime.now()
+    # Wait for 25 seconds and interupt the task 3
     while datetime.now() < start+timedelta(seconds=25):
         pass
     d['3'].set_interupt_flag()
