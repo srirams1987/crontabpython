@@ -7,11 +7,9 @@ from enum import Enum
 
 taskQueue = Queue()
 
-
-class task:
+class Task:
     """
     Class that encapsulate the command string. The command string will be executed in the terminal or the command prompt
-    TODO: add specific eval for specific eval-enviroment. MATLAB, terminal, python, etc
 
     """
     def __init__(self, cmd_str):
@@ -21,8 +19,52 @@ class task:
         return self._cmd_str
 
     def eval(self, name, id):
+        raise(ValueError)
+
+
+class TerminalRunnerTask(Task):
+    def __init__(self, cmd_str):
+        Task.__init__(self, cmd_str)
+
+    def eval(self, name, id):
         print((datetime.now(), name, id))
         os.system(self._cmd_str)
+
+class MATLABRunnerTask(Task):
+    def __init__(self, cmd_str):
+        Task.__init__(self, cmd_str)
+        
+    def eval(self, name, id):
+        self._matlab_eval()
+
+    def _matlab_eval(self):
+        print("MATLAB  eval " + self.get_cmd_str())
+
+class PythonScriptRunnerTask(Task):
+    def __init__(self, cmd_str):
+        Task.__init__(self, cmd_str)
+    
+    def eval(self, name, id):
+        self._eval_python_script()
+
+    def _eval_python_script(self):
+        print( " Python script " + self.get_cmd_str())
+
+class Runner_Type(Enum):
+    TERMINAL = 1
+    MATLAB  = 2
+    PYTHON_SCRIPT = 3 
+
+
+class Task_Factory:
+    def __init__(self):
+        pass
+    @staticmethod
+    def create_task(type, cmd_string):
+        if type == Runner_Type.TERMINAL:
+            return TerminalRunnerTask(cmd_string)
+        elif type == Runner_Type.MATLAB:
+            return MATLABRunnerTask(cmd_string)
 
 class FREQUENCY(Enum) :
     """
@@ -37,7 +79,7 @@ class FREQUENCY(Enum) :
     Minute10 = 5
     Seconds10 = 6
 
-class crontask(Thread):
+class Cron_Task(Thread):
     """
     A thread class that will encapsulates the id, task and frequency for the cron task. 
     This class will wait will the task is ready to be executed and add the task to the task-execution-queue
